@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 Player_count=0
 declare -a Logged_in_users
+VENV_DIR="./venv"
+VENV_PYTHON="$VENV_DIR/bin/python"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "First time running! Setting up the game environment quietly..."
+    if command -v python3.10 &> /dev/null; then
+        python3.10 -m venv "$VENV_DIR"
+        "$VENV_DIR/bin/pip" install -r .requirements.txt --quiet
+        echo "Setup complete."
+    else
+        echo -e "\e[31mError: Python 3.10 is not installed on your system.\e[0m"
+        echo -e "\e[31mPlease install Python 3.10 to play this game.\e[0m"
+        exit 1
+    fi
+fi
 Start(){
     while (( Player_count < 2 ));do
         read -p $'\e[33mDo you want to Register or Login: \e[0m' Login_Register
@@ -16,7 +30,8 @@ Start(){
     echo -e "\e[36m------------------------------------------\e[0m"
     echo -e "\e[36mPlayer Limit reached! Players: ${Logged_in_users[*]}\e[0m"
     echo -e "\e[32mLaunching Game...\e[0m"
-    python3 game.py "${Logged_in_users[@]}"
+    echo -e ""
+    $VENV_PYTHON game.py "${Logged_in_users[@]}"
 }
 Login(){
     read -p $'\e[33mEnter your Username: \e[0m' Username
