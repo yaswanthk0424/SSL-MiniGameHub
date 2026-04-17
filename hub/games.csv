@@ -1,4 +1,3 @@
-Game_Name,Path_to_the_Game
 Tic-Tac-Toe,./games/tictactoe.py
 Othello,./games/othello.py
 Connect4,./games/connect4.py 

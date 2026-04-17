@@ -12,12 +12,14 @@ class Game_Base:
     Draw_Board(screen)   renders the board each frame
     Handle_Click(pos, screen) (boolean) translate click to a move
     Board convention:  0 = empty | 1 = Player 1 | 2 = Player 2
-    """
+    """ 
     def __init__(self, Player1, Player2, rows, cols):
         self.Player1     = Player1
         self.Player2     = Player2
         self.Player_Turn = 0                                   # 0=P1, 1=P2
         self.Player_List = [Player1, Player2]
+        self.rows = rows
+        self.cols = cols
         self.Game_Board  = np.zeros((rows, cols), dtype=int)   # NumPy board
     @property
     def Current_Player(self):
@@ -55,16 +57,18 @@ class Game_Base:
 
 #  SCREEN / LAYOUT CONSTANTS 
 
-SCREEN_WT = 800
-SCREEN_HT = 600
+SCREEN_WT = 1200
+SCREEN_HT = 900
 
-TITLE_HT  = SCREEN_HT // 5     #"GameHub" banner
-HEADER_HT = SCREEN_HT // 8     #player names bar
+TITLE_HT  = SCREEN_HT // 5     #"GameHub" banner (background not text)
+HEADER_HT = SCREEN_HT // 8     #player names bar (Background not text)
 BUTTON_WT = SCREEN_WT // 3     #game button width
 BUTTON_HT = SCREEN_HT // 12    #game button height
 BUTTON_RADIUS = 6
 
 # Colours
+""" BG: Background Color
+    FG: Font Color      """
 BG            = (15,  25,  35)
 TITLE_BG      = (30,  40,  60)
 TITLE_FG      = (255, 255, 255)
@@ -87,6 +91,7 @@ def make_fonts():
 
 
 def draw_banner(screen, font, text, center_y, width, height, bg, fg):
+    #Draws the banner along with text on it
     rect = pygame.Rect(0, 0, width, height)
     rect.center = (SCREEN_WT // 2, center_y)
     pygame.draw.rect(screen, bg, rect)
@@ -108,13 +113,13 @@ def draw_button(screen, font, text, center_y, mouse):
     return rect
 
 def load_games_csv(path="games.csv"):
-    defaults = {
-        "Tic-Tac-Toe" : "games/tictactoe.py",
+    default_games  = {
+        "TicTacToe"    : "games/tictactoe.py",
         "Othello"      : "games/othello.py",
         "Connect Four" : "games/connect4.py",
     }
     if not os.path.exists(path):
-        return defaults
+        return default_games
     mapping = {}
     with open(path, newline="") as f:
         for row in csv.reader(f):
@@ -122,8 +127,7 @@ def load_games_csv(path="games.csv"):
                 name, script = row[0].strip(), row[1].strip()
                 if name and script:
                     mapping[name] = script
-    return mapping if mapping else defaults
-
+    return mapping if mapping else default_games
 
 def launch_game(script_path, player1, player2):
     abs_path = os.path.abspath(script_path)
@@ -139,7 +143,7 @@ def startmenu(screen, fonts, player1, player2, game_map):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:#checks specifically for left mouse click
                 mx, my = event.pos
                 # Reconstructing button rects
                 btn_y = TITLE_HT + HEADER_HT
