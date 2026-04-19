@@ -1,0 +1,6 @@
+.DS_Store
+.vscode/
+hub/.DS_Store
+hub/Images/.DS_Store
+hub/Images/Connect4/.DS_Store
+hub/test.py
