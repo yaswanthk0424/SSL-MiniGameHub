@@ -1,6 +1,8 @@
 import pygame
 import sys,os
 import numpy as np
+import csv
+from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from game import Game_Base
@@ -39,9 +41,9 @@ class Connect_4(Game_Base):
                 self.Player_Switch()
             return True
         return False
-    def Draw_Board(self, screen): 
+    def Draw_Board(self, screen):
         Board_Surface = pygame.image.load('./Images/Connect4/board_new.png').convert_alpha()
-        Board_rect= Board_Surface.get_rect(center=(350,400))
+        Board_rect = Board_Surface.get_rect(center=(350,400))
         screen.blit(Board_Surface,Board_rect)
         p1_rows,p1_cols = np.where(self.Game_Board == 1) # returns rows and cols as seperate lists whereever 1 is present
         p2_rows,p2_cols = np.where(self.Game_Board == 2) 
@@ -60,8 +62,9 @@ class Connect_4(Game_Base):
             if col<self.cols:
                 return self.Make_Move(row,col)
             return False
-def run(player1: str, player2: str):
+def run(player1, player2):
     pygame.init()
+    Game = Connect_4(Player1,Player2)   
     screen = pygame.display.set_mode((700,750))
     pygame.display.set_caption("Connect Four")
     red_arrow_surface=pygame.image.load('./Images/Connect4/red_arrow.png').convert_alpha()
@@ -80,13 +83,17 @@ def run(player1: str, player2: str):
                 if Game.Winning_condition() != 0:
                     winner = Game.Winning_condition()
                     running = False
+                    is_Draw = True if winner == 3 else False
+                    if winner != 3:
+                        Game.Log_Game_Result("Connect_4",Game.Player_List[winner-1],Game.Player_List[2-winner],is_Draw)
+                    else:Game.Log_Game_Result("Connect_4",Game.Player1,Game.Player2,is_Draw)
                     game_over = True
-            (mouse_pos_x,mouse_pos_y) = pygame.mouse.get_pos()
-            column_no = mouse_pos_x//100
-            arrow_rect = arrow_surface[1-Game.Current_Player_Value].get_rect(center = (49+column_no*100,30))
-            screen.fill((0,0,0))
-            Game.Draw_Board(screen)
-            screen.blit(arrow_surface[1-Game.Current_Player_Value],arrow_rect)
+        (mouse_pos_x,mouse_pos_y) = pygame.mouse.get_pos()
+        column_no = mouse_pos_x//100
+        arrow_rect = arrow_surface[1-Game.Current_Player_Value].get_rect(center = (49+column_no*100,30))
+        screen.fill((0,0,0))
+        Game.Draw_Board(screen)
+        screen.blit(arrow_surface[1-Game.Current_Player_Value],arrow_rect)
         pygame.display.update()
         clock.tick(60)
     while game_over:
@@ -109,7 +116,6 @@ def run(player1: str, player2: str):
 if __name__ == "__main__":
     Player1 = sys.argv[1]
     Player2 = sys.argv[2]
-    Game = Connect_4(Player1,Player2)   
     run(Player1, Player2)
     pygame.quit()
     sys.exit()

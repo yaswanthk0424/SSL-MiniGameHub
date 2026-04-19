@@ -4,6 +4,7 @@ import sys
 import os
 import csv
 import subprocess
+from datetime import date
 class Game_Base:
     """
     #Base class for the 2-player, turn-based board game.
@@ -53,8 +54,15 @@ class Game_Base:
     def Handle_Click(self, pos, screen):
         #Override.Convert pixel click to a board move. Returns True or false accordingly
         return False
-
-
+    def Log_Game_Result(self,game_name: str ,Winner,Loser,is_Draw):
+        base_dir =  os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(base_dir,"history.csv")
+        Draw_status = "Yes" if is_Draw else "No"
+        today = date.today().strftime("%d-%m-%Y")
+        new_row = [game_name,today,Winner,Loser,Draw_status]
+        with open(file_path,mode = "a",newline= "") as file:
+            writer = csv.writer(file)
+            writer.writerow(new_row)
 #  SCREEN / LAYOUT CONSTANTS 
 
 SCREEN_WT = 1200
@@ -177,7 +185,7 @@ def startmenu(screen, fonts, player1, player2, game_map):
             draw_button(screen, fonts["button"], name, btn_y, mouse)
         # Quit button
         draw_button(screen, fonts["button"], "QUIT", btn_y + BUTTON_HT + 20, mouse)
-        pygame.display.flip()
+        pygame.display.update()
         clock.tick(60)
 if __name__ == "__main__":
     if len(sys.argv) < 3:
