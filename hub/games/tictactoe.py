@@ -1,151 +1,223 @@
-from hub.game import Game_Base
 import pygame
 import sys
 import numpy as np
+import os
 
-# Constants
-ROWS,COLS=10,10
-WIDTH,HEIGHT=600,600
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from game import Game_Base
 
-CELL_SIZE = WIDTH//COLS
+# ================= CONSTANTS =================
+ROWS, COLS = 10, 10
+SCREEN_WT, SCREEN_HT = 600, 600
+CELL_SIZE = SCREEN_WT // COLS
 
-LINE_COLOR = (200,200,200)
-P1_COLOR = (255,100,100)
-P2_COLOR = (100,150,255)
-BG_COLOR = (255,216,172)
+# COLORS 
+BG_COLOR   = (20, 20, 30)
+LINE_COLOR = (70, 80, 110)
+
+P1_COLOR = (255, 120, 120)
+P2_COLOR = (120, 180, 255)
+
+BUTTON_WT = SCREEN_WT // 3
+BUTTON_HT = SCREEN_HT // 12
 
 
-class TicTacToe(Game_Base): #TicTacToe is child class of Game_Base
-    
-    
-    def Make_move(self,row,col):
-        if self.Game_Board[row,col]==0:
-            self.Game_Board[row,col]=self.Current_Player_Value
+# === GAME CLASS ===
+class TicTacToe(Game_Base):
+
+    def Make_move(self, row, col):
+        if self.Game_Board[row, col] == 0:
+            self.Game_Board[row, col] = self.Current_Player_Value
             return True
-        
         return False
-    
+
     def Draw_Board(self, screen):
         screen.fill(BG_COLOR)
 
-        # Grid lines
+        # grid
         for i in range(ROWS):
             pygame.draw.line(screen, LINE_COLOR,
                              (0, i * CELL_SIZE),
-                             (WIDTH, i * CELL_SIZE))
+                             (SCREEN_WT, i * CELL_SIZE), 2)
+
         for j in range(COLS):
             pygame.draw.line(screen, LINE_COLOR,
                              (j * CELL_SIZE, 0),
-                             (j * CELL_SIZE, HEIGHT))
+                             (j * CELL_SIZE, SCREEN_HT), 2)
 
-        # Draw X and O
+        # X and O
         for r in range(ROWS):
             for c in range(COLS):
                 if self.Game_Board[r, c] == 1:
-                    #  X
-                    # pygame.draw.line(surface,color,start,end)
                     pygame.draw.line(screen, P1_COLOR,
-                                     (c*CELL_SIZE+10, r*CELL_SIZE+10),
-                                     ((c+1)*CELL_SIZE-10, (r+1)*CELL_SIZE-10), 3)
+                                     (c*CELL_SIZE+15, r*CELL_SIZE+15),
+                                     ((c+1)*CELL_SIZE-15, (r+1)*CELL_SIZE-15), 3)
                     pygame.draw.line(screen, P1_COLOR,
-                                     ((c+1)*CELL_SIZE-10, r*CELL_SIZE+10),
-                                     (c*CELL_SIZE+10, (r+1)*CELL_SIZE-10), 3)
+                                     ((c+1)*CELL_SIZE-15, r*CELL_SIZE+15),
+                                     (c*CELL_SIZE+15, (r+1)*CELL_SIZE-15), 3)
+
                 elif self.Game_Board[r, c] == 2:
-                    # O
-                    # pygame.draw(surface,color,center,radius)
                     pygame.draw.circle(screen, P2_COLOR,
                                        (c*CELL_SIZE + CELL_SIZE//2,
                                         r*CELL_SIZE + CELL_SIZE//2),
                                        CELL_SIZE//3, 3)
-            
+
     def Handle_Click(self, pos, screen):
-        x,y = pos
-        row = y//CELL_SIZE         
-        col = x//CELL_SIZE
-        
-        if col<COLS:
-            return self.Make_move(row,col)
+        x, y = pos
+        row = y // CELL_SIZE
+        col = x // CELL_SIZE
+        if col < COLS:
+            return self.Make_move(row, col)
         return False
-if __name__=="__main__":
+
+    def Winning_condition(self):
+        b = (self.Game_Board == self.Current_Player_Value)
+
+        if np.any(b[:, :-4] & b[:, 1:-3] & b[:, 2:-2] & b[:, 3:-1] & b[:, 4:]):
+            return self.Current_Player_Value
+
+        elif np.any(b[:-4, :] & b[1:-3, :] & b[2:-2, :] & b[3:-1, :] & b[4:, :]):
+            return self.Current_Player_Value
+
+        elif np.any(b[:-4, :-4] & b[1:-3, 1:-3] & b[2:-2, 2:-2] & b[3:-1, 3:-1] & b[4:, 4:]):
+            return self.Current_Player_Value
+
+        elif np.any(b[4:, :-4] & b[3:-1, 1:-3] & b[2:-2, 2:-2] & b[1:-3, 3:-1] & b[:-4, 4:]):
+            return self.Current_Player_Value
+
+        elif not np.any(self.Game_Board == 0):
+            return 3
+
+        return 0
+
+
+def draw_gameover(screen, text):
+    overlay = pygame.Surface((SCREEN_WT, SCREEN_HT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 200))
+    screen.blit(overlay, (0, 0))
+
+    font_big = pygame.font.SysFont(None, 70)
+    font_mid = pygame.font.SysFont(None, 40)
+
+    title = font_big.render("GAME OVER", True, (255, 220, 120))
+    screen.blit(title, title.get_rect(center=(SCREEN_WT//2, 180)))
+
+    result = font_mid.render(text, True, (255, 255, 255))
+    screen.blit(result, result.get_rect(center=(SCREEN_WT//2, 250)))
+
+
+def draw_button(screen, text, y, mouse, color):
+    rect = pygame.Rect(0, 0, BUTTON_WT, BUTTON_HT)
+    rect.center = (SCREEN_WT // 2, y)
+
+    # hover
+    if rect.collidepoint(mouse):
+        color = tuple(c-40 for c in color)
+
+    # shadow
+    shadow = rect.copy()
+    shadow.y += 5
+    pygame.draw.rect(screen, (0, 0, 0), shadow, border_radius=10)
+
+    pygame.draw.rect(screen, color, rect, border_radius=10)
+
+    font = pygame.font.SysFont("calibri", 30)
+    surf = font.render(text, True, (255, 255, 255))
+    screen.blit(surf, surf.get_rect(center=rect.center))
+
+    return rect
+
+
+# ================= MAIN =================
+if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH,HEIGHT))
-    screen.fill(BG_COLOR)
-    
-    def draw_center_banner(screen, text_main, text_sub, font_big, font_small):
-        
-
-        banner_height = 120
-
-        # Create transparent surface
-        overlay = pygame.Surface((WIDTH, banner_height), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))  # black with transparency
-
-        # Position (center vertically)
-        y_pos = HEIGHT // 2 - banner_height // 2
-
-        # Draw banner
-        screen.blit(overlay, (0, y_pos))
-
-        # Main text
-        main_text = font_big.render(text_main, True, (255, 255, 255))
-        main_rect = main_text.get_rect(center=(WIDTH // 2, y_pos + 40))
-
-        # Sub text
-        sub_text = font_small.render(text_sub, True, (220, 220, 220))
-        sub_rect = sub_text.get_rect(center=(WIDTH // 2, y_pos + 80))
-
-        # Draw text
-        screen.blit(main_text, main_rect)
-        screen.blit(sub_text, sub_rect)
-        
-    
+    screen = pygame.display.set_mode((SCREEN_WT, SCREEN_HT))
     clock = pygame.time.Clock()
-    running = True # for pygame window
-    
-    p1 = sys.argv[1] 
+
+    p1 = sys.argv[1]
     p2 = sys.argv[2]
+
+    game = TicTacToe(p1, p2, ROWS, COLS)
+
+    game_over = False
+    running = True
+    is_draw = False
+    count = 1
+
     
-    game = TicTacToe(p1,p2,ROWS,COLS)
-    game_over = False # will show game over if this becomes True
-    
+    restart_btn = None
+    leader_btn = None
+    back_btn = None
+
     while running:
+        mouse = pygame.mouse.get_pos()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-                if game.Handle_Click(event.pos,screen):
-                    result = game.Winning_condition()
-                    if result != 0:
-                        game_over = True
-                    else:
-                        game.Player_Switch()
+            if event.type == pygame.MOUSEBUTTONDOWN:
 
-        # ALWAYS DRAW BOARD FIRST
+                # GAME PLAY
+                if not game_over:
+                    if game.Handle_Click(event.pos, screen):
+                        result = game.Winning_condition()
+                        if result != 0:
+                            game_over = True
+                        else:
+                            game.Player_Switch()
+
+                # GAME OVER BUTTONS
+                else:
+                    if restart_btn and restart_btn.collidepoint(event.pos):
+                        game.Reset_Board()
+                        game_over = False
+                        count = 1
+                        is_draw = False
+
+                    elif back_btn and back_btn.collidepoint(event.pos):
+                        running = False
+
+                    elif leader_btn and leader_btn.collidepoint(event.pos):
+                        import subprocess
+                        print("Running leaderboard...")
+
+                        subprocess.run(["bash", "../hub/leaderboard.sh"], check=True)
+        # Draw Board
         game.Draw_Board(screen)
 
-        # THEN DRAW OVERLAY
+        # Game Over Interface
         if game_over:
             result = game.Winning_condition()
 
             if result == 1:
-                text = f"{p1} Wins!!"
+                text = f"{p1} Wins!"
+                winner, loser = p1, p2
+                is_draw = False
+
             elif result == 2:
-                text = f"{p2} Wins!!"
+                text = f"{p2} Wins!"
+                winner, loser = p2, p1
+                is_draw = False
+
             else:
                 text = "Draw"
+                winner, loser = None, None
+                is_draw = True
 
-            font_big = pygame.font.SysFont(None, 60)
-            font_small = pygame.font.SysFont(None, 30)
+            draw_gameover(screen, text)
 
-            draw_center_banner(
-                screen,
-                text,
-                f"{text}",
-                "Press anywhere to view leaderboard",
-                font_big,
-                font_small
-            )
+            # saving in history.csv 
+            if count == 1:
+                game.Log_Game_Result("TicTacToe", winner, loser, is_draw)
+                count = 0
+
+            restart_btn = draw_button(screen, "Restart", 320, mouse, (80, 200, 120))
+            leader_btn  = draw_button(screen, "Leaderboard", 400, mouse, (90, 140, 255))
+            back_btn    = draw_button(screen, "Back", 480, mouse, (180, 80, 200))
 
         pygame.display.update()
         clock.tick(60)
+
+    pygame.quit()
+    sys.exit()
