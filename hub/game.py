@@ -1,110 +1,215 @@
 import pygame
-import numpy
+import numpy as np
 import sys
+import os
+import csv
+from datetime import date
+import subprocess
+class Game_Base:
+    """
+    #Base class for the 2-player, turn-based board game.
+    Winning_condition()  returns 0=ongoing, 1=P1 wins, 2=P2 wins, 3=draw
+    Make_Move(*args)     returns True if the move was legal and applied
+    Draw_Board(screen)   renders the board each frame
+    Handle_Click(pos, screen) (boolean) translate click to a move
+    Board convention:  0 = empty | 1 = Player 1 | 2 = Player 2
+    """
+    def __init__(self, Player1, Player2, rows, cols):
+        self.Player1     = Player1
+        self.Player2     = Player2
+        self.Player_Turn = 0                                   # 0=P1, 1=P2
+        self.Player_List = [Player1, Player2]
+        self.Game_Board  = np.zeros((rows, cols), dtype=int)   # NumPy board
+    @property
+    def Current_Player(self):
+        #Name of the player who is currently playing
+        return self.Player_List[self.Player_Turn]
 
-# start menu
-if __name__ == "__main__":
-    # initialise pygame
-    pygame.init()
-    # storing player's name
-    user1 = sys.argv[1]
-    user2 = sys.argv[2]
-    
-    # dict name to path
-    game_names_toPaths = {}
-    
-    with open("games.csv","r") as file:
-        for line in file:
-            arr = line.strip().split(',')
-            game_names_toPaths[arr[0]] = arr[1]
-    
-    # dimensions
-    SCREEN_WT = 800
-    SCREEN_HT = 500
-    title_ht,title_wt = SCREEN_HT/5,SCREEN_WT #text "user1 vs user2"
-    header_ht,header_wt = SCREEN_HT/6,SCREEN_WT #text "GAME HUB"
-    button_wt = SCREEN_WT/3 
-    button_ht = SCREEN_HT/12
-    
-    BUTTON_BORDER_RADIUS = 0
-    # screen
-    SCREEN = pygame.display.set_mode((SCREEN_WT,SCREEN_HT))
-    
-    # colors
-    BG_COLOR = (15, 25, 35)         
-    BUTTON_FONT_COLOR = (255, 255, 255)
-    BUTTON_BG = (40, 60, 110)         
-    LIGHT_BUTTON_BG = (60, 90, 160)   
-    
-    HEADER_BG = (25, 35, 50)          
-    HEADER_FONT_COLOR = (0, 200, 200)  
-    
-    TITLE_BG = (40, 45, 60)           
-    TITLE_FONT_COLOR = (255, 255, 255) 
-    
-    QUIT_BG = (130, 40, 40)           
-    LIGHT_QUIT_BG = (180, 50, 50)     
-    
-    # Fonts 
-    TITLE_FONT = pygame.font.SysFont("lucida",100)
-    HEADER_FONT = pygame.font.SysFont("timesnewroman",60)
-    BUTTON_FONT = pygame.font.SysFont("calibri",40)
-    
-    def makeBox(text_surface, center_y, wt, ht, color, border_radius=0):
-        rect = pygame.Rect(0,0,wt,ht) #rect with req dimensions(virtually)
-        rect.center = (SCREEN_WT/2,center_y) #shifting rect to desired centre(virtually)
-        pygame.draw.rect(SCREEN,color,rect,border_radius) #pasting on screen
-        text_rect = text_surface.get_rect(center = rect.center) #creating a rect for text and centering
-        SCREEN.blit(text_surface,text_rect) #pasting
-    
-    def makeButton(text,center_y,mouse):
-        button_text = BUTTON_FONT.render(text,True,BUTTON_FONT_COLOR)
-        button_rect = pygame.Rect(0,0,button_wt,button_ht)
-        button_rect.center = (SCREEN_WT//2,center_y)
-        button_color =  BUTTON_BG if text != "QUIT" else QUIT_BG
-        if button_rect.collidepoint(mouse):
-            button_color = LIGHT_BUTTON_BG if text != "QUIT" else LIGHT_QUIT_BG
-        
-        pygame.draw.rect(SCREEN, button_color, button_rect, border_radius=BUTTON_BORDER_RADIUS)
-        text_rect = button_text.get_rect(center = button_rect.center)
-        SCREEN.blit(button_text, text_rect)
-        
-    def startmenu():
-        
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+    @property
+    def Current_Player_Value(self):
+        #value to be placed inside the board
+        return self.Player_Turn + 1
+
+    def Player_Switch(self):
+        #For switching player turns
+        self.Player_Turn = 1 - self.Player_Turn
+
+    def Reset_Board(self):
+        #resets board after every game
+        self.Game_Board[:] = 0
+    def Winning_condition(self):
+        #overridable,checks for winning condition and returns value accordingly
+        return 0
+
+    def Make_Move(self, *args):
+        #Overridable,checks for moves and return true or false accordinly
+        return False
+
+    def Draw_Board(self, screen):
+        #Overridable.Updating the board accordingly
+        pass
+
+    def Handle_Click(self, pos, screen):
+        #Override.Convert pixel click to a board move. Returns True or false accordingly
+        return False
+    def Log_Game_Result(self,game_name: str ,Winner,Loser,is_Draw):
+        base_dir =  os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(base_dir,"history.csv")
+        Draw_status = "Yes" if is_Draw else "No"
+        today = date.today().strftime("%d-%m-%Y")
+        new_row = [game_name,today,Winner,Loser,Draw_status]
+        with open(file_path,mode = "a",newline= "") as file:
+            writer = csv.writer(file)
+            writer.writerow(new_row)
+
+
+#  SCREEN / LAYOUT CONSTANTS 
+
+SCREEN_WT = 800
+SCREEN_HT = 600
+
+TITLE_HT  = SCREEN_HT // 5     #"GameHub" banner
+HEADER_HT = SCREEN_HT // 8     #player names bar
+BUTTON_WT = SCREEN_WT // 3     
+BUTTON_HT = SCREEN_HT // 12    
+BUTTON_RADIUS = 6
+
+
+
+BG            = (18, 18, 28)     
+TITLE_BG      = (28, 28, 45)
+TITLE_FG      = (240, 240, 255)
+
+HEADER_BG     = (22, 22, 38)
+HEADER_FG     = (160, 200, 255)
+
+BUTTON_BG     = (70, 90, 200)    
+BUTTON_HOVER  = (100, 120, 255)
+BUTTON_FG     = (255, 255, 255)
+
+QUIT_BG       = (180, 60, 60)
+QUIT_HOVER    = (230, 80, 80)
+
+
+def make_fonts():
+    #Building the font dictionary.
+    return {
+        "title"  : pygame.font.SysFont("lucidagrande",  52),
+        "header" : pygame.font.SysFont("calibri",       28),
+        "button" : pygame.font.SysFont("calibri",       32),
+    }
+
+
+def draw_banner(screen, font, text, center_y, width, height, bg, fg):
+    rect = pygame.Rect(0, 0, width, height)
+    rect.center = (SCREEN_WT // 2, center_y)
+    pygame.draw.rect(screen, bg, rect)
+    surf = font.render(text, True, fg)
+    screen.blit(surf, surf.get_rect(center=rect.center))
+def draw_button(screen, font, text, center_y, mouse):
+    rect = pygame.Rect(0, 0, BUTTON_WT, BUTTON_HT)
+    rect.center = (SCREEN_WT // 2, center_y)
+
+    is_quit = (text == "QUIT")
+    if rect.collidepoint(mouse):
+        colour = QUIT_HOVER if is_quit else BUTTON_HOVER
+    else:
+        colour = QUIT_BG    if is_quit else BUTTON_BG
+
+    # shadow 
+    shadow_rect = rect.copy()
+    shadow_rect.y += 4
+    pygame.draw.rect(screen, (0,0,0), shadow_rect, border_radius=BUTTON_RADIUS)
+
+    # main button
+    pygame.draw.rect(screen, colour, rect, border_radius=BUTTON_RADIUS)
+
+    # highlight line (top)
+    pygame.draw.line(screen, (255,255,255), 
+                    (rect.left+5, rect.top+2), 
+                    (rect.right-5, rect.top+2), 2)
+    surf = font.render(text, True, BUTTON_FG)
+    screen.blit(surf, surf.get_rect(center=rect.center))
+    return rect
+
+def load_games_csv(path="games.csv"):
+    defaults = {
+        "Tic-Tac-Toe" : "games/tictactoe.py",
+        "Othello"      : "games/othello.py",
+        "Connect Four" : "games/connect4.py",
+    }
+    if not os.path.exists(path):
+        return defaults
+    mapping = {}
+    with open(path, newline="") as f:
+        for row in csv.reader(f):
+            if len(row) >= 2:
+                name, script = row[0].strip(), row[1].strip()
+                if name and script:
+                    mapping[name] = script
+    return mapping if mapping else defaults
+
+
+def launch_game(script_path, player1, player2):
+    abs_path = os.path.abspath(script_path)
+    if not os.path.exists(abs_path):
+        print(f"[game.py] Script not found: {abs_path}")
+        return
+    subprocess.run([sys.executable, abs_path, player1, player2])
+def startmenu(screen, fonts, player1, player2, game_map):
+    clock      = pygame.time.Clock()
+    game_names = list(game_map.keys())
+    running    = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mx, my = event.pos
+                # Reconstructing button rects
+                btn_y = TITLE_HT + HEADER_HT
+                for name in game_names:
+                    btn_y += BUTTON_HT + 20
+                    r = pygame.Rect(0, 0, BUTTON_WT, BUTTON_HT)
+                    r.center = (SCREEN_WT // 2, btn_y)
+                    if r.collidepoint(mx, my):
+                        launch_game(game_map[name], player1, player2)
+                        break   # returning to menu after game closes
+                # QUIT button
+                quit_y = btn_y + BUTTON_HT + 20
+                quit_r = pygame.Rect(0, 0, BUTTON_WT, BUTTON_HT)
+                quit_r.center = (SCREEN_WT // 2, quit_y)
+                if quit_r.collidepoint(mx, my):
                     running = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    pass
-                    
-            mouse = pygame.mouse.get_pos()
-            SCREEN.fill(BG_COLOR)
-            
-            # title 
-            title_text = TITLE_FONT.render("GameHub",True,TITLE_FONT_COLOR) 
-            center_y = title_ht//2
-            makeBox(title_text,center_y,title_wt,title_ht,TITLE_BG)
-            
-            # Header
-            header_text = HEADER_FONT.render(f"{user1} v/s {user2}",True,HEADER_FONT_COLOR)
-            header_center_y = title_ht + (header_ht/2)
-            makeBox(header_text,header_center_y,header_wt,header_ht,HEADER_BG)
-            
-            # Game Buttons
-            game_names = list(game_names_toPaths.keys())
-            button_center_y = title_ht + header_ht 
-            for i in range(len(game_names_toPaths)):
-                button_text = game_names[i]
-                button_center_y += button_ht//2 + 50
-                makeButton(button_text,button_center_y,mouse)
-            
-            # quit button
-            quit_center_y = button_center_y + (button_ht/2) + 50
-            makeButton("QUIT",quit_center_y,mouse)
-            
-            pygame.display.update()
-    startmenu()
+        mouse = pygame.mouse.get_pos()
+        screen.fill(BG)
+        # Title
+        draw_banner(screen, fonts["title"], "GameHub",
+                    TITLE_HT // 2, SCREEN_WT, TITLE_HT, TITLE_BG, TITLE_FG)
+        # Player names — purely informational, no gameplay state
+        draw_banner(screen, fonts["header"],
+                    f"{player1}   vs   {player2}",
+                    TITLE_HT + HEADER_HT // 2,
+                    SCREEN_WT, HEADER_HT, HEADER_BG, HEADER_FG)
+        # Game buttons
+        btn_y = TITLE_HT + HEADER_HT
+        for name in game_names:
+            btn_y += BUTTON_HT + 20
+            draw_button(screen, fonts["button"], name, btn_y, mouse)
+        # Quit button
+        draw_button(screen, fonts["button"], "QUIT", btn_y + BUTTON_HT + 20, mouse)
+        pygame.display.flip()
+        clock.tick(60)
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python game.py <Player1> <Player2>")
+        sys.exit(1)
+    player1, player2 = sys.argv[1], sys.argv[2]
+    game_map         = load_games_csv("games.csv")
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WT, SCREEN_HT))
+    pygame.display.set_caption("GameHub")
+    fonts  = make_fonts()
+    startmenu(screen, fonts, player1, player2, game_map)
     pygame.quit()
     sys.exit()
