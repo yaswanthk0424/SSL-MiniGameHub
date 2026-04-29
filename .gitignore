@@ -1,5 +1,8 @@
 .DS_Store
 .vscode/
+hub/.vscode
+hub/__pycache__/
+hub/venv/
 hub/.DS_Store
 hub/Images/.DS_Store
 hub/Images/Connect4/.DS_Store

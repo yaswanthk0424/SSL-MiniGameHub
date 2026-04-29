@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <h1 align="center">Mini Game Hub </h1>
 
 ## Project Idea
@@ -67,3 +68,6 @@ The project is divided into distinct components
 * Improve UI and user experience
 
 ---
+=======
+# SSL-MiniGameHub
+>>>>>>> Stashed changes
