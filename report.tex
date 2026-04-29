@@ -1,0 +1,227 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{cite}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\title{\textbf{Mini Game Hub Project}}
+\author{Kanchumarthi Praneeth and Kaneti Yaswanth}
+\date{29 April 2026}
+
+\begin{document}
+\sloppy
+\maketitle
+\tableofcontents
+\newpage
+
+
+\section{Introduction}
+This Project Implements a minigame hub with two players authenticated via a bash script.Two authenticated users can select and play board games through a graphical interface, with results recorded and displayed through a leaderboard system. The games implemented are Tic-Tac-Toe, Othello and Connect Four.
+
+
+\section{External Libraries}
+\label{sec:libraries}
+
+This section lists all the external libraries and tools used in the project and their purpose.
+
+\subsection{Numpy}
+\begin{itemize}
+    \item In this project its main usage is storing the position of pieces in a numpy array which is later used to check win and if the move is allowed.
+\end{itemize}
+The official documentation is available at \cite{numpy_docs}.
+
+\subsection{Matplotlib}
+\begin{itemize}
+    \item It has been used to draw a bar graph having the top 5 players by wins.
+    \item It has also been used for drawing a pie chart showing the frequency of each game played.
+\end{itemize}
+The official documentation is available at \cite{matplotlib_docs}.
+
+\subsection{Pygame}
+\begin{itemize}
+    \item The GUI part of different games are rendered through Pygame's Inbuilt functions.
+    \item Images and Text are displayed/rendered by the use of pygame.
+\end{itemize}
+The official documentation is available at \cite{pygame_docs}.
+
+\subsection{CSV}
+\begin{itemize}
+    \item It has been used for reading \texttt{history.csv} to make the bar graph and pie chart in \texttt{plotting.py}.
+\end{itemize}
+
+\subsection{Sys}
+\begin{itemize}
+    \item This module has been used to find the path of the folder the project is in.
+    \item It has been used for receiving inputs from the terminal using \texttt{sys.argv}.
+
+\end{itemize}
+
+\subsection{Datetime}
+\begin{itemize}
+    \item It has been used for getting the date and time to write in \texttt{history.csv} after each match ends.
+\end{itemize}
+
+\subsection{OS.Path}
+\begin{itemize}
+    \item It has been used to get the absolute path of files in the project and resolve the relative paths.
+\end{itemize}
+
+
+\subsection{Bash \& AWK}
+\begin{itemize}
+    \item The Bash scripting language is used for the authentication system and the leaderboard display \cite{bashref}. AWK is used inside \texttt{leaderboard.sh} for parsing \texttt{history.csv} and computing wins, losses and win percentages for each player \cite{awk_docs}.
+\end{itemize}
+
+
+
+\section{Design and Architecture}
+\label{sec:design}
+
+The project is divided into two parts. The first is the Bash part which handles authentication and leaderboard display. The second is the Python  which handles all gameplay and graphics.
+
+The overall flow is as follows. The user runs \texttt{main.sh} from the terminal. This script asks two players to Register or Login one at a time. Once both players are authenticated it launches \texttt{game.py} with both usernames passed as command line arguments. A pygame window then opens showing the hub menu. The player picks a game and that game is launched as a separate subprocess. When the game ends the result is saved to \texttt{history.csv} and the leaderboard script is called alongside \texttt{plotting.py}.
+
+A base class called \texttt{Game\_Base} is defined inside \texttt{game.py}. All three games inherit from this class \cite{pythonoop}. The base class handles common things like switching player turns, storing the board as a numpy array, saving results to the CSV file, and calling the leaderboard. Each specific game class only overrides the game functions such as \texttt{Winning\_condition()} and \texttt{Make\_Move()}.
+
+Login and authentication are done in \texttt{main.sh}. The usernames are asked in the terminal and if a username exists in \texttt{users.tsv} where all usernames and hashed passwords(hashed using sha256sum) are saved, it asks for the password to login. If the username does not exist it asks to register. 
+
+The list of available games and their relative paths are stored in \texttt{games.csv}. The hub reads this file on startup and creates a button for each game. A new game can be added by just adding a line to the CSV and dropping a script in the \texttt{games/} folder without changing any hub code.
+
+After each game, data from \texttt{history.csv} is collected, processed and represented using pyplot and Bash. The pyplot includes a bar graph of the top 5 players by wins across all games and a pie chart of game type frequency. Before showing the plot the pygame window prompts for a metric which is used by \texttt{leaderboard.sh} to sort and print the final leaderboard for all games separately \cite{w3schools}.
+
+
+\section{Features Implemented}
+\label{sec:features}
+
+\subsection{Authentication}
+The authentication system is fully implemented in Bash. Players can register with a username and password. The password is hashed using SHA-256 and stored in \texttt{users.tsv}. During login the entered password is hashed and compared to the stored hash. The same user cannot fill both player slots and exactly two different users must authenticate before the game window opens.
+
+\subsection{Game Hub}
+After both players log in a pygame window opens. It shows a title banner saying GameHub, a bar with both player names, and buttons for each available game loaded from \texttt{games.csv}. There is also a quit button. Hovering over a button changes its colour. The hub shrinks to a tiny invisible window when a game is launched and restores itself after the game exits.
+
+\subsection{Tic-Tac-Toe}
+The features implemented are:
+\begin{itemize}
+    \item Indicating player turn by displaying up the corresponding character of the player and Displaying a text indicating the player's turn.
+    \item Drawing the line that causes the win by a line of the colour of the winning piece.
+    \item Showing the final result whether a draw, player 1 won or player 2 won after a few seconds and Displaying the leaderboard.
+\end{itemize}
+
+\subsection{Othello}
+The features added are:
+\begin{itemize}
+    \item A live counter showing the current number of pieces of each colour at that move.
+    \item A Dot with colour corresponding to current player showing possible moves.
+    \item Text on the current player's side of the board showing the current player playing.
+    \item Shows the no.of discs currently each player has on board.
+    \item At the end shows the player who won or a draw after a few seconds and then gets back to menu.
+\end{itemize}
+
+\subsection{Connect Four}
+The features implemented are:
+\begin{itemize}
+    \item Indicating player turn by displaying Player 1 or Player 2 on the Top
+    \item Indicatin Player turn through the arrow colour and changing the position of arrow by column hovered over.
+    \item Showing the 4 pieces by which the player won by a line briefly.
+    \item Displays who won the game or whether it ended in a draw at the end.
+\end{itemize}
+
+\subsection{Leaderboard and Charts}
+After each game the result is appended to \texttt{history.csv} with the game name, date, winner, loser and draw status. The leaderboard script reads this file using \texttt{awk} and computes wins, losses, win percentage and W/L ratio for each player. Three separate Plots are printed for Tic-Tac-Toe, Connect4 and Othello sorted by the chosen metric. The two current players are highlighted in different colours. At the same time \texttt{plotting.py} opens a matplotlib window with two bar charts and pie chart. The charts close when the player presses R or Q through terminal.
+
+
+\section{Directory Structure}
+\label{sec:directory}
+
+The suggested directory structure from the project description was followed. Two extra files were added: \texttt{plotting.py} for the matplotlib charts and \texttt{games.csv} for the dynamic game registry. The \texttt{venv} folder is created automatically at runtime and is not part of the submission.
+
+\begin{verbatim}
+hub/
+|-- main.sh              Entry point: handles login/register, launches game.py
+|-- game.py              Hub GUI and Game_Base class
+|-- leaderboard.sh       Reads history.csv and prints leaderboard tables
+|-- plotting.py          Generates matplotlib statistics charts
+|-- games.csv            Maps game names to their script paths
+|-- history.csv          Persistent log of all game results
+|-- users.tsv            Stores usernames and SHA-256 hashed passwords
+|-- .requirements.txt    All pip packages with pinned versions
+|-- venv/                Created at runtime, not submitted
+|-- games/               Contains Game scripts
+|   |-- tictactoe.py     
+|   |-- othello.py       
+|   `-- connect4.py     
+`-- Images/            Contains the necessary images for games
+    |-- Connect4/
+    |   |-- board_new.png
+    |   |-- arrow.png
+    |   |-- red_arrow.png
+    |   `-- yellow_arrow.png
+    `-- Othello/
+        `-- Othello_board.png
+\end{verbatim}
+
+\section{Installation and Setup}
+\label{sec:setup}
+The usage of the project is simple.First Download the whole directory and Open a terminal and change the directory to the \texttt{SSL-MiniGameHub/hub} folder. Ensure that Python 3.10 is installed and available as \texttt{python3.10} in the terminal. Now run the following command.
+
+\begin{center}
+\texttt{./main.sh}
+\end{center}
+
+On the very first run the script will automatically detect that the virtual environment does not exist, create it using Python 3.10 and install all the required packages from \texttt{.requirements.txt}. After setup it proceeds to the login prompt. On all future runs the setup is skipped and it goes straight to authentication. If a permission error appears run \texttt{chmod +x main.sh} once before running the script.
+
+All the dependencies are listed in \texttt{hub/.requirements.txt} with pinned version numbers and they get installed through .requirement.txt without our intervention,no hands on setup. The main ones are \texttt{pygame-ce}, \texttt{numpy} and \texttt{matplotlib}. The rest are indirect dependencies that get installed automatically.
+
+
+\section{Usage}
+\label{sec:usage}
+
+Run \texttt{./main.sh} from the \texttt{hub} directory. The terminal will show a welcome message and ask each player to type Register or Login. The words are case sensitive so they must be typed exactly as shown. Once both players have authenticated the terminal shows their names and the pygame hub window opens automatically.
+
+In the hub window click on any game button to launch that game. All three games are controlled entirely with the mouse. In Tic-Tac-Toe click any empty cell on the grid. In Othello click on a cell that shows a valid move. In Connect Four click anywhere in the column you want to drop a disc into.
+
+After the game ends the game over screen appears. The player selects a sorting metric and then the matplotlib charts and the terminal leaderboard are shown simultaneously. Press R to go back to the hub menu and play another game, or press Q to close everything.
+
+
+\section{Retrospective}
+\label{sec:retro}
+
+\subsection{Hurdles faced and how we resolved them}
+\begin{itemize}
+    \item Setting up the virtual environment in \texttt{main.sh} with Python 3.10 was tricky since teammates were on different operating systems and the interpreter path kept changing on Windows.
+    \item Pixel width differences between Mac and Windows caused game elements to appear at wrong positions on one machine even though they looked fine on the other.
+    \item Resolving the subprocess flow and minimising the hub window when a game launched took a lot of trial and error to get working cleanly.
+    \item Running Matplotlib in a separate window without freezing pygame required research. Switching to \texttt{plt.show(block=False)} and running it in its own subprocess fixed it.
+    \item Checking for valid moves in Othello was hard to come up with. Verifying all eight directions and ensuring at least one disc gets flipped took a lot of thinking.
+    \item Flipping the discs correctly after a move in Othello was also tricky to get the indexing right without flipping cells outside the valid line.
+    \item Learning Pygame from scratch was a general challenge throughout the project, especially understanding the event loop and how to handle mouse input correctly.
+\end{itemize}
+
+
+
+
+\subsection{What can be done with 10 more hours}
+
+\begin{itemize}
+    \item An Option to edit/delete the player profile through Main.sh authentication
+    \item Add password strength when authenticating the users.
+    \item Adding Themes like light and dark mode
+    \item The Game Menu interface can be made more attractive design wise
+    \item The screen elements can be placed properly by taking the screen size of each screen into consideration.
+    \item The GUI can be made of adjustable size and a GUI scale factor can be added.
+    \item Another game or more can be added.
+    \item A page to show rules for each of the games can be added.
+    \item Could have used images instead of drawing using pygame which shows rough pixels
+    \item Adding Sliding animation for discs in Connect4
+\end{itemize}
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
