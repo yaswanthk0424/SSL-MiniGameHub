@@ -1,5 +1,58 @@
-<<<<<<< Updated upstream
+
 <h1 align="center">Mini Game Hub </h1>
+
+
+
+
+# MiniGameHub — Usage Guide
+
+## Setup and Launch
+1. Download the project `.tgz` file.
+2. Extract it using:
+```bash
+   tar -xvzf submission.tgz
+```
+3. Open a terminal and navigate to the extracted folder:
+```bash
+   cd submission/hub
+```
+4. Run the application:
+```bash
+   bash main.sh
+```
+
+---
+
+## Login / Registration
+- On launching the application, you will be prompted to either **register** or **log in**.
+- Two players are required to enter their **usernames and passwords**.
+
+**Notes:**
+- If a username already exists, you will be asked to enter a different one.
+- If passwords do not match during registration, you will be prompted to re-enter them.
+
+---
+
+## Game Selection
+- After successful login, a **game menu interface** will be displayed.
+- Select the game you want to play using the GUI.
+
+---
+
+## Gameplay
+- The selected game will open in a **Pygame window**.
+- Follow the **on-screen instructions** to play.
+
+---
+
+## After Gameplay
+- Once the game ends, you will be returned to the **main menu**.
+- You can:
+  - Play another game
+  - Exit the application
+
+
+# Preliminary plan
 
 ## Project Idea
 
@@ -68,6 +121,4 @@ The project is divided into distinct components
 * Improve UI and user experience
 
 ---
-=======
-# SSL-MiniGameHub
->>>>>>> Stashed changes
+
